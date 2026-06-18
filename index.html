@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Insécurité Alimentaire au Sénégal</title>
+
+    <!-- OpenLayers & plugins -->
+    <link rel="stylesheet" href="./resources/ol.css">
+    <link rel="stylesheet" href="resources/fontawesome-all.min.css">
+    <link href="resources/photon-geocoder-autocomplete.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
+    <link rel="stylesheet" href="./resources/qgis2web.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* ============================================================
+           RESET & BASE
+        ============================================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --green-deep:   #2D5016;
+            --green-mid:    #4A7C28;
+            --green-light:  #7DB54A;
+            --ochre:        #C8922A;
+            --ochre-light:  #E8B85A;
+            --beige:        #F5F0E8;
+            --cream:        #FAFAF7;
+            --dark:         #2C2C2C;
+            --mid:          #5A5A5A;
+            --light:        #9A9A9A;
+            --white:        #FFFFFF;
+            --panel-w:      320px;
+            --nav-h:        60px;
+            --sidebar-w:    56px;
+        }
+
+        html, body {
+            width: 100%; height: 100%;
+            font-family: 'Inter', sans-serif;
+            color: var(--dark);
+            background: var(--cream);
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           TOP NAV
+        ============================================================ */
+        .top-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--nav-h);
+            background: var(--green-deep);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            z-index: 1000;
+            box-shadow: 0 2px 12px rgba(0,0,0,.25);
+        }
+
+        .top-nav .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-nav .logo-icon {
+            width: 36px; height: 36px;
+            background: var(--ochre);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .top-nav .logo-icon svg {
+            width: 20px; height: 20px; fill: var(--white);
+        }
+
+        .top-nav .logo-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--white);
+            font-weight: 600;
+            letter-spacing: .02em;
+        }
+
+        .top-nav .logo-text span {
+            color: var(--ochre-light);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-tab {
+            padding: 8px 22px;
+            border-radius: 6px;
+            font-size: .97rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all .22s ease;
+            letter-spacing: .02em;
+        }
+
+        .nav-tab.active {
+            background: var(--ochre);
+            color: var(--white);
+        }
+
+        .nav-tab:not(.active) {
+            background: transparent;
+            color: rgba(255,255,255,.75);
+        }
+
+        .nav-tab:not(.active):hover {
+            background: rgba(255,255,255,.1);
+            color: var(--white);
+        }
+
+        /* ============================================================
+           MAIN WRAPPER
+        ============================================================ */
+        .main-wrapper {
+            padding-top: var(--nav-h);
+            width: 100%; height: 100%;
+        }
+
+        /* ============================================================
+           SECTION VISIBILITY
+        ============================================================ */
+        .section-panel {
+            display: none;
+            width: 100%;
+            min-height: calc(100vh - var(--nav-h));
+        }
+        .section-panel.active { display: block; }
+
+        /* ============================================================
+           WELCOME SECTION
+        ============================================================ */
+        #section-bienvenue {
+            background: var(--beige);
+        }
+
+        /* Hero banner */
+        .hero {
+            background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 60%, var(--green-light) 100%);
+            padding: 72px 64px 56px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -60px;
+            width: 320px; height: 320px;
+            border-radius: 50%;
+            background: rgba(200,146,42,.18);
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -40px; left: 40%;
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.06);
+        }
+
+        .hero-eyebrow {
+            display: inline-block;
+            font-size: .85rem;
+            font-weight: 600;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--ochre-light);
+            margin-bottom: 16px;
+        }
+
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+            color: var(--white);
+            line-height: 1.18;
+            max-width: 680px;
+            margin-bottom: 20px;
+        }
+
+        .hero-title em {
+            font-style: normal;
+            color: var(--ochre-light);
+        }
+
+        .hero-sub {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,.8);
+            max-width: 560px;
+            line-height: 1.65;
+        }
+
+        /* Content grid */
+        .welcome-grid {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 0;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 64px 48px;
+            align-items: start;
+        }
+
+        /* Text column */
+        .welcome-text h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.85rem;
+            color: var(--green-deep);
+            margin-bottom: 20px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .welcome-text h2::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 6px;
+            width: 4px; height: 70%;
+            background: var(--ochre);
+            border-radius: 2px;
+        }
+
+        .welcome-text p {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--mid);
+            margin-bottom: 18px;
+        }
+
+        .welcome-text p strong {
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        /* Stats strip */
+        .stats-strip {
+            display: flex;
+            gap: 32px;
+            margin: 36px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.3rem;
+            font-weight: 700;
+            color: var(--green-deep);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: .88rem;
+            font-weight: 500;
+            color: var(--mid);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .divider {
+            width: 1px;
+            height: 48px;
+            background: #d0c9bc;
+            align-self: center;
+        }
+
+        /* CTA link */
+        .cta-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding: 14px 28px;
+            background: var(--green-deep);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background .22s, transform .18s;
+        }
+
+        .cta-link:hover {
+            background: var(--green-mid);
+            transform: translateY(-2px);
+        }
+
+        .cta-link svg {
+            width: 16px; height: 16px; fill: none;
+            stroke: currentColor; stroke-width: 2;
+        }
+
+        /* Image column */
+        .welcome-image-col {
+            padding-left: 48px;
+            position: sticky;
+            top: calc(var(--nav-h) + 24px);
+        }
+
+        .img-frame {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 16px 48px rgba(45,80,22,.18);
+        }
+
+        .img-frame::before {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border: 2px solid var(--ochre);
+            border-radius: 16px;
+            z-index: -1;
+            opacity: .5;
+        }
+
+        .img-frame img {
+            width: 100%;
+            height: 340px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Fallback placeholder if image path doesn't resolve */
+        .img-placeholder {
+            width: 100%;
+            height: 340px;
+            background: linear-gradient(135deg, #c8e0a8 0%, #a0c870 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: var(--green-deep);
+        }
+
+        .img-placeholder svg {
+            width: 64px; height: 64px;
+            stroke: var(--green-deep); fill: none; stroke-width: 1.5;
+            opacity: .5;
+        }
+
+        .img-placeholder p {
+            font-size: .85rem;
+            opacity: .65;
+            text-align: center;
+            padding: 0 24px;
+        }
+
+        .img-caption {
+            margin-top: 14px;
+            font-size: .92rem;
+            color: var(--light);
+            line-height: 1.5;
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Source note */
+        .source-note {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 48px 64px;
+            border-top: 1px solid #ddd8ce;
+        }
+
+        .source-note p {
+            padding-top: 28px;
+            font-size: .9rem;
+            color: var(--light);
+        }
+
+        /* ============================================================
+           MAP SECTION
+        ============================================================ */
+        #section-carte {
+            height: calc(100vh - var(--nav-h));
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #section-carte.active {
+            display: flex;
+        }
+
+        /* Left layer panel (dockable) */
+        .layer-panel {
+            position: absolute;
+            top: 0; left: 0;
+            width: var(--panel-w);
+            height: 100%;
+            background: var(--white);
+            border-right: 1px solid #e0dbd3;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            transition: transform .3s ease;
+            box-shadow: 2px 0 16px rgba(0,0,0,.1);
+        }
+
+        .layer-panel.collapsed {
+            transform: translateX(calc(-1 * var(--panel-w)));
+        }
+
+        .layer-panel-header {
+            background: var(--green-deep);
+            color: var(--white);
+            padding: 16px 18px;
+            font-size: .95rem;
+            font-weight: 600;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .layer-panel-header svg {
+            width: 18px; height: 18px;
+            fill: none; stroke: currentColor; stroke-width: 2;
+        }
+
+        .layer-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .layer-group-title {
+            font-size: .82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: var(--light);
+            margin-bottom: 10px;
+            margin-top: 18px;
+        }
+
+        .layer-group-title:first-child { margin-top: 0; }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .layer-item:hover { background: var(--beige); }
+
+        .layer-toggle {
+            width: 36px; height: 20px;
+            background: #d0d0d0;
+            border-radius: 10px;
+            position: relative;
+            transition: background .2s;
+            flex-shrink: 0;
+            cursor: pointer;
+            border: none;
+        }
+
+        .layer-toggle.on { background: var(--green-mid); }
+
+        .layer-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: var(--white);
+            transition: left .2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,.2);
+        }
+
+        .layer-toggle.on::after { left: 18px; }
+
+        .layer-name {
+            font-size: .96rem;
+            color: var(--dark);
+        }
+
+        .layer-swatch {
+            width: 14px; height: 14px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        /* Panel toggle button (tab sticking out) */
+        .panel-toggle-btn {
+            position: absolute;
+            top: 50%;
+            left: var(--panel-w);
+            transform: translateY(-50%);
+            z-index: 201;
+            width: 24px; height: 56px;
+            background: var(--green-deep);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0 6px 6px 0;
+            color: var(--white);
+            transition: left .3s ease, background .2s;
+        }
+
+        .panel-toggle-btn:hover { background: var(--green-mid); }
+
+        .panel-toggle-btn.collapsed { left: 0; }
+
+        .panel-toggle-btn svg {
+            width: 14px; height: 14px;
+            stroke: currentColor; fill: none; stroke-width: 2.5;
+            transition: transform .3s;
+        }
+
+        .panel-toggle-btn.collapsed svg { transform: rotate(180deg); }
+
+        /* Map container */
+        #map {
+            flex: 1;
+            height: 100%;
+            position: absolute;
+            top: 0; right: 0;
+            left: var(--panel-w);
+            bottom: 0;
+            transition: left .3s ease;
+        }
+
+        #map.expanded { left: 0; }
+
+        /* Right card shared styles */
+        .right-card {
+            background: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.12);
+            overflow: hidden;
+        }
+
+        .right-card-header {
+            background: var(--green-deep);
+            color: var(--white);
+            padding: 10px 14px;
+            font-size: .88rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+
+        .right-card-header svg {
+            width: 14px; height: 14px;
+            stroke: currentColor; fill: none; stroke-width: 2.5;
+            transition: transform .25s;
+        }
+
+        .right-card-header.open svg { transform: rotate(180deg); }
+
+        .right-card-body {
+            padding: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            transition: max-height .3s ease, padding .3s ease;
+        }
+
+        .right-card-body.collapsed {
+            max-height: 0;
+            padding-top: 0; padding-bottom: 0;
+        }
+
+        /* Legend */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+            font-size: .92rem;
+            color: var(--dark);
+        }
+
+        .legend-sym {
+            width: 28px; height: 16px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .legend-sym.line {
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .legend-section-label {
+            font-size: .8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--light);
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+
+        /* Vulnerability panel (right panel) */
+        .right-panel {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 280px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: calc(100% - 24px);
+        }
+
+        /* Vuln card scrollable */
+        .vuln-card-body {
+            padding: 0;
+            max-height: 420px;
+            overflow-y: auto;
+            transition: max-height .3s ease, padding .3s ease;
+        }
+
+        .vuln-card-body.collapsed {
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        /* Scale bar */
+        .vuln-scale {
+            display: flex;
+            margin: 10px 14px 6px;
+            border-radius: 6px;
+            overflow: hidden;
+            height: 10px;
+        }
+
+        .vuln-scale-seg { flex: 1; }
+
+        .vuln-scale-labels {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 14px 10px;
+            font-size: .7rem;
+            color: var(--light);
+        }
+
+        /* Region rows */
+        .vuln-region {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 14px;
+            border-bottom: 1px solid #f0ece6;
+            cursor: default;
+            transition: background .15s;
+        }
+
+        .vuln-region:last-child { border-bottom: none; }
+        .vuln-region:hover { background: #faf8f5; }
+
+        .vuln-bar-wrap {
+            flex: 1;
+            height: 8px;
+            background: #ece8e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .vuln-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width .6s ease;
+        }
+
+        .vuln-region-name {
+            font-size: .82rem;
+            font-weight: 500;
+            color: var(--dark);
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .vuln-badge {
+            font-size: .68rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 12px;
+            color: var(--white);
+            flex-shrink: 0;
+            letter-spacing: .03em;
+        }
+
+        .v-critique  { background: #b91c1c; }
+        .v-eleve     { background: #d97706; }
+        .v-modere    { background: #ca8a04; }
+        .v-faible    { background: #16a34a; }
+
+        .bar-critique { background: linear-gradient(90deg, #b91c1c, #ef4444); }
+        .bar-eleve    { background: linear-gradient(90deg, #d97706, #f59e0b); }
+        .bar-modere   { background: linear-gradient(90deg, #ca8a04, #eab308); }
+        .bar-faible   { background: linear-gradient(90deg, #16a34a, #4ade80); }
+
+        /* OL popup override */
+        .ol-popup {
+            position: absolute;
+            background-color: white;
+            box-shadow: 0 6px 24px rgba(0,0,0,.18);
+            padding: 16px;
+            border-radius: 10px;
+            min-width: 200px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* OL control overrides */
+        .ol-control > * {
+            background-color: var(--white) !important;
+            color: var(--dark) !important;
+            border-radius: 6px !important;
+        }
+        .ol-control {
+            background: transparent !important;
+            padding: 2px !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .welcome-grid { grid-template-columns: 1fr; padding: 36px 24px; }
+            .welcome-image-col { padding-left: 0; margin-top: 36px; position: static; }
+            .hero { padding: 48px 28px 40px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ================================================================
+     TOP NAV
+================================================================ -->
+<nav class="top-nav">
+    <div class="logo">
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+        </div>
+        <span class="logo-text">Sécu<span>Alim</span> Sénégal</span>
+    </div>
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showSection('bienvenue', this)">Bienvenue</button>
+        <button class="nav-tab" onclick="showSection('carte', this)">Carte Interactive</button>
+    </div>
+</nav>
+
+<!-- ================================================================
+     MAIN WRAPPER
+================================================================ -->
+<div class="main-wrapper">
+
+    <!-- ============================================================
+         SECTION BIENVENUE
+    ============================================================ -->
+    <div id="section-bienvenue" class="section-panel active">
+
+        <!-- Hero -->
+        <div class="hero">
+            <span class="hero-eyebrow">Atlas de la vulnérabilité alimentaire</span>
+            <h1 class="hero-title">L'insécurité alimentaire au <em>Sénégal</em> : comprendre pour agir</h1>
+            <p class="hero-sub">Une analyse géographique et socioéconomique des dynamiques de la pauvreté et de l'accès à l'alimentation à travers les régions sénégalaises.</p>
+        </div>
+
+        <!-- Main content grid -->
+        <div class="welcome-grid">
+
+            <!-- Text column -->
+            <div class="welcome-text">
+
+                <h2>Qu'est-ce que l'insécurité alimentaire ?</h2>
+
+                <p>L'insécurité alimentaire désigne la situation dans laquelle des personnes <strong>n'ont pas accès de manière fiable à une quantité suffisante d'aliments abordables et nutritifs</strong>. Elle touche des millions de Sénégalais, en particulier dans les zones rurales et périurbaines, et se manifeste sous différentes formes : faim chronique, malnutrition et dépendance alimentaire saisonnière.</p>
+
+                <p>Au Sénégal, cette réalité est étroitement liée à la <strong>variabilité climatique</strong>, à la fragilité des systèmes de production agricole, aux inégalités d'accès aux marchés et aux services de base. Les ménages ruraux sont les plus exposés, souvent confrontés à des périodes de soudure alimentaire entre deux saisons agricoles.</p>
+
+                <p>La pauvreté joue un rôle déterminant : elle limite les capacités d'achat, réduit la diversité alimentaire et aggrave les déficits nutritionnels, notamment chez les enfants de moins de cinq ans. Selon les enquêtes nationales, <strong>plus de 37 % de la population</strong> vit en dessous du seuil de pauvreté, avec des disparités marquées entre les régions.</p>
+
+                <p>Comprendre la distribution géographique de ces vulnérabilités est essentiel pour orienter les politiques publiques et les interventions humanitaires vers les zones prioritaires. La cartographie présentée dans cet atlas s'inscrit dans cette démarche.</p>
+
+                <!-- Stats -->
+                <div class="stats-strip">
+                    <div class="stat-item">
+                        <span class="stat-value">37%</span>
+                        <span class="stat-label">Taux de pauvreté</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-value">14</span>
+                        <span class="stat-label">Régions analysées</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-value">17M</span>
+                        <span class="stat-label">Habitants</span>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <a href="https://www.ansd.sn/actualite/resultats-sur-les-tendances-de-la-pauvrete-au-senegal"
+                   target="_blank" rel="noopener" class="cta-link">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Résultats ANSD — Tendances de la pauvreté au Sénégal
+                </a>
+
+            </div>
+
+            <!-- Image column -->
+            <div class="welcome-image-col">
+                <div class="img-frame">
+                    <!--
+                        Remplacez le src ci-dessous par le chemin relatif correct vers votre image.
+                        Exemple : src="images/enfant.jpg"
+                        Le chemin absolu Windows (C:\Users\...) ne fonctionne pas dans un navigateur.
+                    -->
+                    <img
+                        src="images/enfant.jpg"
+                        alt="Enfant affecté par l'insécurité alimentaire au Sénégal"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                    >
+                    <div class="img-placeholder" style="display:none;">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <p>Placez votre image dans le dossier <strong>images/</strong> et nommez-la <strong>enfant.jpg</strong></p>
+                    </div>
+                </div>
+                <p class="img-caption">Un enfant sénégalais dans une zone de vulnérabilité alimentaire.<br>Source : terrain, 2026.</p>
+            </div>
+
+        </div>
+
+        <!-- Source note -->
+        <div class="source-note">
+            <p>Sources : ANSD (2023), PAM, UNICEF Sénégal, FAO West Africa. Carte réalisée avec QGIS / qgis2web.</p>
+        </div>
+
+    </div><!-- /section-bienvenue -->
+
+    <!-- ============================================================
+         SECTION CARTE
+    ============================================================ -->
+    <div id="section-carte" class="section-panel">
+
+        <!-- Left layer panel -->
+        <aside class="layer-panel" id="layerPanel">
+            <div class="layer-panel-header">
+                <span>Couches géographiques</span>
+                <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </div>
+            <div class="layer-panel-body">
+                <div class="layer-group-title">Limites administratives</div>
+                <div class="layer-item">
+                    <button class="layer-toggle on" id="toggle-senegal" onclick="toggleLayer('LimiteSenegal_1', this)"></button>
+                    <div class="layer-swatch" style="background:#2d5016; border:2px solid #1a3009;"></div>
+                    <span class="layer-name">Limite Sénégal</span>
+                </div>
+                <div class="layer-item">
+                    <button class="layer-toggle on" id="toggle-regions" onclick="toggleLayer('Limitesregions_3', this)"></button>
+                    <div class="layer-swatch" style="background:#7db54a; border:2px solid #4a7c28;"></div>
+                    <span class="layer-name">Limites des régions</span>
+                </div>
+
+                <div class="layer-group-title" style="margin-top:24px;">Informations</div>
+                <div style="padding:8px 10px; font-size:.8rem; color:var(--mid); line-height:1.6;">
+                    Cliquez sur une entité de la carte pour afficher ses informations détaillées.
+                </div>
+            </div>
+        </aside>
+
+        <!-- Panel toggle tab -->
+        <button class="panel-toggle-btn" id="panelToggleBtn" onclick="toggleLayerPanel()" title="Afficher/masquer le panneau de couches">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+
+        <!-- Map -->
+        <div id="map">
+            <div id="popup" class="ol-popup">
+                <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+                <div id="popup-content"></div>
+            </div>
+        </div>
+
+        <!-- Right panel: légende + vulnérabilité par région -->
+        <div class="right-panel">
+
+            <!-- Carte symboles -->
+            <div class="right-card">
+                <div class="right-card-header open" id="legendHeader" onclick="toggleCard('legendBody','legendHeader')">
+                    <span>Légende cartographique</span>
+                    <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+                </div>
+                <div class="right-card-body" id="legendBody">
+                    <div class="legend-section-label">Limites administratives</div>
+                    <div class="legend-item">
+                        <div class="legend-sym line" style="background:#2d5016; width:28px;"></div>
+                        <span>Limite nationale</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-sym line" style="background:#7db54a; width:28px; border:1px dashed #4a7c28; height:3px;"></div>
+                        <span>Limites des régions</span>
+                    </div>
+                    <div class="legend-section-label" style="margin-top:14px;">Niveau de vulnérabilité</div>
+                    <div class="legend-item"><div class="legend-sym" style="background:#b91c1c; border-radius:3px;"></div><span>Critique</span></div>
+                    <div class="legend-item"><div class="legend-sym" style="background:#d97706; border-radius:3px;"></div><span>Élevé</span></div>
+                    <div class="legend-item"><div class="legend-sym" style="background:#ca8a04; border-radius:3px;"></div><span>Modéré</span></div>
+                    <div class="legend-item"><div class="legend-sym" style="background:#16a34a; border-radius:3px;"></div><span>Faible</span></div>
+                </div>
+            </div>
+
+            <!-- Vulnérabilité par région -->
+            <div class="right-card">
+                <div class="right-card-header open" id="vulnHeader" onclick="toggleCard('vulnBody','vulnHeader')">
+                    <span>Vulnérabilité par région</span>
+                    <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+                </div>
+                <div class="vuln-card-body" id="vulnBody">
+                    <!-- Gradient scale -->
+                    <div class="vuln-scale">
+                        <div class="vuln-scale-seg" style="background:#16a34a;"></div>
+                        <div class="vuln-scale-seg" style="background:#65a30d;"></div>
+                        <div class="vuln-scale-seg" style="background:#ca8a04;"></div>
+                        <div class="vuln-scale-seg" style="background:#d97706;"></div>
+                        <div class="vuln-scale-seg" style="background:#dc2626;"></div>
+                        <div class="vuln-scale-seg" style="background:#b91c1c;"></div>
+                    </div>
+                    <div class="vuln-scale-labels"><span>Faible</span><span>Critique</span></div>
+
+                    <!-- Régions du Sénégal avec niveau de vulnérabilité alimentaire -->
+                    <!-- Données indicatives basées sur ANSD, ENSAN, PAM 2022-2024 -->
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Kolda</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-critique" style="width:92%;"></div></div>
+                        <span class="vuln-badge v-critique">Critique</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Kédougou</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-critique" style="width:88%;"></div></div>
+                        <span class="vuln-badge v-critique">Critique</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Sédhiou</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-critique" style="width:85%;"></div></div>
+                        <span class="vuln-badge v-critique">Critique</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Ziguinchor</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-eleve" style="width:74%;"></div></div>
+                        <span class="vuln-badge v-eleve">Élevé</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Tambacounda</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-eleve" style="width:72%;"></div></div>
+                        <span class="vuln-badge v-eleve">Élevé</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Matam</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-eleve" style="width:68%;"></div></div>
+                        <span class="vuln-badge v-eleve">Élevé</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Fatick</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-modere" style="width:57%;"></div></div>
+                        <span class="vuln-badge v-modere">Modéré</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Kaffrine</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-modere" style="width:55%;"></div></div>
+                        <span class="vuln-badge v-modere">Modéré</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Kaolack</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-modere" style="width:52%;"></div></div>
+                        <span class="vuln-badge v-modere">Modéré</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Louga</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-modere" style="width:48%;"></div></div>
+                        <span class="vuln-badge v-modere">Modéré</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Saint-Louis</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-modere" style="width:44%;"></div></div>
+                        <span class="vuln-badge v-modere">Modéré</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Thiès</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-faible" style="width:30%;"></div></div>
+                        <span class="vuln-badge v-faible">Faible</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Diourbel</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-faible" style="width:28%;"></div></div>
+                        <span class="vuln-badge v-faible">Faible</span>
+                    </div>
+                    <div class="vuln-region">
+                        <span class="vuln-region-name">Dakar</span>
+                        <div class="vuln-bar-wrap"><div class="vuln-bar bar-faible" style="width:14%;"></div></div>
+                        <span class="vuln-badge v-faible">Faible</span>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /right-panel -->
+
+    </div><!-- /section-carte -->
+
+</div><!-- /main-wrapper -->
+
+<!-- ================================================================
+     SCRIPTS
+================================================================ -->
+<script src="resources/qgis2web_expressions.js"></script>
+<script src="./resources/functions.js"></script>
+<script src="./resources/ol.js"></script>
+<script src="./resources/ol-layerswitcher.js"></script>
+<script src="resources/photon-geocoder-autocomplete.min.js"></script>
+<script src="layers/LimiteSenegal_1.js"></script>
+<script src="layers/Limitesregions_3.js"></script>
+<script src="styles/LimiteSenegal_1_style.js"></script>
+<script src="styles/Limitesregions_3_style.js"></script>
+<script src="./layers/layers.js" type="text/javascript"></script>
+<script src="./resources/Autolinker.min.js"></script>
+<script src="./resources/qgis2web.js"></script>
+
+<script>
+/* ================================================================
+   SECTION NAVIGATION
+================================================================ */
+function showSection(name, btn) {
+    document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    btn.classList.add('active');
+
+    // Trigger map resize when switching to map section
+    if (name === 'carte') {
+        setTimeout(() => {
+            if (typeof window.map !== 'undefined' && window.map) {
+                window.map.updateSize();
+            }
+        }, 350);
+    }
+}
+
+/* ================================================================
+   LEFT PANEL TOGGLE
+================================================================ */
+function toggleLayerPanel() {
+    const panel = document.getElementById('layerPanel');
+    const btn   = document.getElementById('panelToggleBtn');
+    const mapEl = document.getElementById('map');
+
+    panel.classList.toggle('collapsed');
+    btn.classList.toggle('collapsed');
+    mapEl.classList.toggle('expanded');
+
+    setTimeout(() => {
+        if (typeof window.map !== 'undefined' && window.map) {
+            window.map.updateSize();
+        }
+    }, 320);
+}
+
+/* ================================================================
+   LAYER TOGGLE (interfaces with OL map layers)
+================================================================ */
+function toggleLayer(layerName, btn) {
+    btn.classList.toggle('on');
+    const isOn = btn.classList.contains('on');
+
+    // Try to find the layer in window.map or globally
+    if (typeof window.map !== 'undefined' && window.map) {
+        window.map.getLayers().forEach(function(layer) {
+            if (layer.get('title') === layerName || layer.get('name') === layerName) {
+                layer.setVisible(isOn);
+            }
+        });
+    }
+}
+
+/* ================================================================
+   RIGHT PANEL COLLAPSE
+================================================================ */
+function toggleCard(bodyId, headerId) {
+    const body   = document.getElementById(bodyId);
+    const header = document.getElementById(headerId);
+    body.classList.toggle('collapsed');
+    header.classList.toggle('open');
+}
+
+/* ================================================================
+   ZOOM INITIAL — augmenter le niveau de zoom sur le Sénégal
+   On attend que la carte OL soit initialisée par qgis2web.js
+================================================================ */
+(function waitForMap() {
+    if (typeof window.map !== 'undefined' && window.map) {
+        var view = window.map.getView();
+        // Centrer sur le Sénégal et augmenter le zoom
+        view.animate({
+            center: ol.proj.fromLonLat([-14.4, 14.4]),
+            zoom: 7,
+            duration: 800
+        });
+    } else {
+        setTimeout(waitForMap, 200);
+    }
+})();
+
+</script>
+
+</body>
+</html>

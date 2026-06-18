@@ -145,6 +145,17 @@
         }
         .section-panel.active { display: block; }
 
+        /* map section overrides the block display */
+        #section-carte { display: flex; }
+        #section-carte:not(.active) {
+            visibility: hidden;
+            pointer-events: none;
+            position: absolute;
+            top: var(--nav-h);
+            left: 0; right: 0;
+            z-index: -1;
+        }
+
         /* ============================================================
            WELCOME SECTION
         ============================================================ */
@@ -399,13 +410,15 @@
         ============================================================ */
         #section-carte {
             height: calc(100vh - var(--nav-h));
-            display: none;
             position: relative;
             overflow: hidden;
         }
 
         #section-carte.active {
-            display: flex;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            position: relative !important;
+            z-index: auto !important;
         }
 
         /* Left layer panel (dockable) */
@@ -1067,11 +1080,14 @@ function showSection(name, btn) {
 
     // Trigger map resize when switching to map section
     if (name === 'carte') {
-        setTimeout(() => {
-            if (typeof window.map !== 'undefined' && window.map) {
-                window.map.updateSize();
-            }
-        }, 350);
+        // Multiple resize calls to ensure OL picks up the new size
+        [100, 300, 600].forEach(delay => {
+            setTimeout(() => {
+                if (typeof window.map !== 'undefined' && window.map) {
+                    window.map.updateSize();
+                }
+            }, delay);
+        });
     }
 }
 
